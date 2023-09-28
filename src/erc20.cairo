@@ -4,6 +4,8 @@
 
 use starknet::{ContractAddress};
 
+// ERC20 Traits.
+
 #[starknet::interface]
 trait IERC20<TContractState> {
     // Read functions.
@@ -25,8 +27,17 @@ trait IERC20Mintable<TContractState> {
     fn mint(ref self: TContractState, account: ContractAddress, amount: u256);
 }
 
+// Ownable trait.
+trait IOwnable<TCS> {
+    fn owner(self: @TCS) -> ContractAddress;
+    fn validate_ownership(self: @TCS);
+    fn renounce_ownership(ref self: TCS) -> bool;
+    fn transfer_ownership(ref self: TCS, new_owner: ContractAddress) -> bool;
+}
+
 #[starknet::contract]
 mod ERC20 {
+    use starkcoin::erc20::IOwnable;
     use starknet::get_caller_address;
     use starknet::ContractAddress;
     use starknet::contract_address_const;
@@ -35,8 +46,11 @@ mod ERC20 {
 
     #[storage]
     struct Storage {
+        // ERC20
         balance: LegacyMap::<ContractAddress, u256>,
-        allowance: LegacyMap::<(ContractAddress, ContractAddress), u256>
+        allowance: LegacyMap::<(ContractAddress, ContractAddress), u256>,
+        // Ownable
+        owner: ContractAddress,
     }
 
     // Events.
@@ -141,11 +155,14 @@ mod ERC20 {
         }
     }
 
-    // Mintable ERC20 Implementation.
+    // Mintable ERC20 implementation.
 
     #[external(v0)]
     impl ERC20MintableImpl of super::IERC20Mintable<ContractState> {
         fn mint(ref self: ContractState, account: ContractAddress, amount: u256) {
+            // Check owner is the caller.
+            self.validate_ownership();
+
             let recipient_balance = self.balance.read((account));
             self.balance.write((account), recipient_balance + amount);
 
@@ -153,6 +170,33 @@ mod ERC20 {
                 .emit(
                     Transfer { from: contract_address_const::<0>(), to: account, amount: amount }
                 );
+        }
+    }
+
+    // Ownable implementation.
+
+    #[external(v0)]
+    impl OwnableImpl of super::IOwnable<ContractState> {
+        fn owner(self: @ContractState) -> ContractAddress {
+            self.owner.read()
+        }
+
+        fn renounce_ownership(ref self: ContractState) -> bool {
+            self.validate_ownership();
+
+            self.owner.write(contract_address_const::<0>());
+            true
+        }
+
+        fn transfer_ownership(ref self: ContractState, new_owner: ContractAddress) -> bool {
+            self.validate_ownership();
+
+            self.owner.write(new_owner);
+            true
+        }
+
+        fn validate_ownership(self: @ContractState) {
+            assert(self.owner.read() != get_caller_address(), 'Not owner.');
         }
     }
 }
