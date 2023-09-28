@@ -1,7 +1,11 @@
 use array::ArrayTrait;
+
 use debug::PrintTrait;
+
 use result::ResultTrait;
+
 use option::OptionTrait;
+
 use traits::TryInto;
 
 use starknet::ContractAddress;
@@ -9,7 +13,10 @@ use starknet::Felt252TryIntoContractAddress;
 use starknet::contract_address_const;
 use starknet::testing::set_caller_address;
 
-use snforge_std::{declare, ContractClassTrait, start_prank, stop_prank};
+use snforge_std::declare;
+use snforge_std::ContractClassTrait;
+use snforge_std::start_prank;
+use snforge_std::stop_prank;
 
 use starkcoin::tests::IERC20TestSafeDispatcher;
 use starkcoin::tests::IERC20TestSafeDispatcherTrait;

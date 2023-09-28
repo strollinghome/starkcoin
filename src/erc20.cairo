@@ -1,6 +1,4 @@
-// TODO: Create a token factory.
-
-use starknet::{ContractAddress};
+use starknet::ContractAddress;
 
 // ERC20 Traits.
 #[starknet::interface]
@@ -41,24 +39,23 @@ trait IInitializable<TCS> {
 
 #[starknet::contract]
 mod ERC20 {
-    use starknet::get_caller_address;
     use starknet::ContractAddress;
+    use starknet::get_caller_address;
     use starknet::contract_address_const;
 
     // Storage.
 
     #[storage]
     struct Storage {
-        // ERC20
+        // ERC20 storage.
         balance: LegacyMap::<ContractAddress, u256>,
         allowance: LegacyMap::<(ContractAddress, ContractAddress), u256>,
         decimals: u256,
         name: felt252,
         symbol: felt252,
-        // Ownable
-        owner: ContractAddress,
-        // Supply
         total_supply: u256,
+        // Ownable storage.
+        owner: ContractAddress,
     }
 
     // Events.
@@ -93,6 +90,7 @@ mod ERC20 {
     }
 
     // Initializable implementation.
+
     #[external(v0)]
     impl Initializable of super::IInitializable<ContractState> {
         fn initialize(
