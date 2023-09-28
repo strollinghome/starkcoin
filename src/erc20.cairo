@@ -1,3 +1,7 @@
+// TODO: Add initialize function.
+// TODO: Make token ownable and gate the mint function.
+// TODO: Create a token factory.
+
 use starknet::{ContractAddress};
 
 #[starknet::interface]
@@ -62,8 +66,6 @@ mod ERC20 {
 
     #[external(v0)]
     impl ERC20Impl of super::IERC20<ContractState> {
-        // TODO: Add initialize function.
-
         fn name(self: @ContractState) -> felt252 {
             1
         }
