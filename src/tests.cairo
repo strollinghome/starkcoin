@@ -8,6 +8,7 @@ trait IERC20Test<TCS> {
     fn decimals(self: @TCS,) -> u256;
     fn balance_of(self: @TCS, account: ContractAddress) -> u256;
     fn allowance(self: @TCS, owner: ContractAddress, spender: ContractAddress) -> u256;
+    fn total_supply(self: @TCS) -> u256;
 
     // Write functions.
     fn transfer(ref self: TCS, recipient: ContractAddress, amount: u256) -> bool;

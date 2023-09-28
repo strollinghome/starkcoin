@@ -86,10 +86,15 @@ fn test_mint() {
     erc20_safe_dispatcher.mint(caller_address, 42).unwrap();
     stop_prank(contract_address);
 
+    // Check total supply.
+    let total_supply = erc20_safe_dispatcher.total_supply().unwrap();
+    assert(total_supply == 42_u256, 'Invalid total supply');
+
     // Check balance.
     let balance_after = erc20_safe_dispatcher.balance_of(caller_address).unwrap();
     assert(balance_after == 42, 'Invalid balance');
 }
+
 #[test]
 fn test_transfer() {
     let caller_address: ContractAddress = contract_address_const::<42>();
@@ -98,6 +103,10 @@ fn test_transfer() {
 
     // Mint
     erc20_safe_dispatcher.mint(caller_address, 42).unwrap();
+
+    // Check total supply.
+    let total_supply = erc20_safe_dispatcher.total_supply().unwrap();
+    assert(total_supply == 42_u256, 'Invalid total supply');
 
     // Transfer
     let recipient_address: ContractAddress = contract_address_const::<43>();
@@ -122,6 +131,10 @@ fn test_allowance_and_transfer_from() {
 
     // Mint
     erc20_safe_dispatcher.mint(caller_address, 42).unwrap();
+
+    // Check total supply.
+    let total_supply = erc20_safe_dispatcher.total_supply().unwrap();
+    assert(total_supply == 42_u256, 'Invalid total supply');
 
     // Approve recipient.
     let recipient_address: ContractAddress = contract_address_const::<43>();

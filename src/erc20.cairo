@@ -11,6 +11,7 @@ trait IERC20<TCS> {
     fn decimals(self: @TCS,) -> u256;
     fn balance_of(self: @TCS, account: ContractAddress) -> u256;
     fn allowance(self: @TCS, owner: ContractAddress, spender: ContractAddress) -> u256;
+    fn total_supply(self: @TCS) -> u256;
 
     // Write functions.
     fn transfer(ref self: TCS, recipient: ContractAddress, amount: u256) -> bool;
@@ -56,6 +57,8 @@ mod ERC20 {
         symbol: felt252,
         // Ownable
         owner: ContractAddress,
+        // Supply
+        total_supply: u256,
     }
 
     // Events.
@@ -106,6 +109,9 @@ mod ERC20 {
             // Set owner.
             self.owner.write(owner);
 
+            // Set total supply.
+            self.total_supply.write(0_u256);
+
             // Emit Initialized event.
             self.emit(Initialized { name: name, symbol: symbol, owner: owner });
         }
@@ -136,6 +142,10 @@ mod ERC20 {
             self: @ContractState, owner: ContractAddress, spender: ContractAddress
         ) -> u256 {
             self.allowance.read((owner, spender))
+        }
+
+        fn total_supply(self: @ContractState) -> u256 {
+            self.total_supply.read()
         }
 
         fn transfer(ref self: ContractState, recipient: ContractAddress, amount: u256) -> bool {
@@ -199,9 +209,15 @@ mod ERC20 {
             // Check owner is the caller.
             self.validate_ownership();
 
+            // Mint tokens.
             let recipient_balance = self.balance.read((account));
             self.balance.write((account), recipient_balance + amount);
 
+            // Increase total supply.
+            let total_supply = self.total_supply.read();
+            self.total_supply.write(total_supply + amount);
+
+            // Emit Transfer event.
             self
                 .emit(
                     Transfer { from: contract_address_const::<0>(), to: account, amount: amount }
