@@ -37,7 +37,6 @@ trait IOwnable<TCS> {
 
 #[starknet::contract]
 mod ERC20 {
-    use starkcoin::erc20::IOwnable;
     use starknet::get_caller_address;
     use starknet::ContractAddress;
     use starknet::contract_address_const;
