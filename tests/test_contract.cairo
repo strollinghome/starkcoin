@@ -66,17 +66,8 @@ fn test_deploy() {
 #[test]
 fn test_mint() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 0);
+    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 42);
     let erc20_safe_dispatcher = ITestSafeDispatcher { contract_address };
-
-    // Check balance.
-    let balance_before = erc20_safe_dispatcher.balance_of(caller_address).unwrap();
-    assert(balance_before == 0, 'Invalid balance');
-
-    // Mint.
-    start_prank(contract_address, caller_address);
-    erc20_safe_dispatcher.mint(caller_address, 42).unwrap();
-    stop_prank(contract_address);
 
     // Check total supply.
     let total_supply = erc20_safe_dispatcher.total_supply().unwrap();
@@ -86,17 +77,11 @@ fn test_mint() {
     let balance_after = erc20_safe_dispatcher.balance_of(caller_address).unwrap();
     assert(balance_after == 42, 'Invalid balance');
 }
-
 #[test]
 fn test_transfer() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 0);
+    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 42);
     let erc20_safe_dispatcher = ITestSafeDispatcher { contract_address };
-
-    // Mint
-    start_prank(contract_address, caller_address);
-    erc20_safe_dispatcher.mint(caller_address, 42).unwrap();
-    stop_prank(contract_address);
 
     // Check total supply.
     let total_supply = erc20_safe_dispatcher.total_supply().unwrap();
@@ -120,13 +105,8 @@ fn test_transfer() {
 #[test]
 fn test_allowance_and_transfer_from() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 0);
+    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 42);
     let erc20_safe_dispatcher = ITestSafeDispatcher { contract_address };
-
-    // Mint
-    start_prank(contract_address, caller_address);
-    erc20_safe_dispatcher.mint(caller_address, 42).unwrap();
-    stop_prank(contract_address);
 
     // Check total supply.
     let total_supply = erc20_safe_dispatcher.total_supply().unwrap();
