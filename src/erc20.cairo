@@ -19,32 +19,17 @@ trait IERC20<TCS> {
     fn approve(ref self: TCS, spender: ContractAddress, amount: u256) -> bool;
 }
 
-// Mint trait.
-trait IERC20Mintable<TCS> {
-    fn mint(ref self: TCS, account: ContractAddress, amount: u256);
-}
-
-// Ownable trait.
-trait IOwnable<TCS> {
-    fn owner(self: @TCS) -> ContractAddress;
-    fn validate_ownership(self: @TCS);
-    fn renounce_ownership(ref self: TCS) -> bool;
-    fn transfer_ownership(ref self: TCS, new_owner: ContractAddress) -> bool;
-}
-
-// Initializable trait.
-trait IInitializable<TCS> {
-    fn initialize(ref self: TCS, name: felt252, symbol: felt252, owner: ContractAddress);
-}
-
 #[starknet::contract]
 mod ERC20 {
     use core::zeroable::Zeroable;
     use starknet::ContractAddress;
     use starknet::get_caller_address;
     use starknet::contract_address_const;
+    use starkcoin::mintable::IERC20Mintable;
+    use starkcoin::ownable::IOwnable;
 
     // Constants.
+
     const DECIMALS: u256 = 18_u256;
 
     // Storage.
@@ -207,7 +192,7 @@ mod ERC20 {
     // Mintable ERC20 implementation.
 
     #[external(v0)]
-    impl ERC20MintableImpl of super::IERC20Mintable<ContractState> {
+    impl ERC20MintableImpl of IERC20Mintable<ContractState> {
         fn mint(ref self: ContractState, account: ContractAddress, amount: u256) {
             // Check owner is the caller.
             self.validate_ownership();
@@ -231,7 +216,7 @@ mod ERC20 {
     // Ownable implementation.
 
     #[external(v0)]
-    impl OwnableImpl of super::IOwnable<ContractState> {
+    impl OwnableImpl of IOwnable<ContractState> {
         fn owner(self: @ContractState) -> ContractAddress {
             self.owner.read()
         }

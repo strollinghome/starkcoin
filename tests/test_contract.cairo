@@ -22,9 +22,8 @@ use snforge_std::stop_prank;
 use starkcoin::tests::ITestSafeDispatcher;
 use starkcoin::tests::ITestSafeDispatcherTrait;
 
-
 fn deploy_contract(
-    salt: felt252, name: felt252, symbol: felt252, owner: ContractAddress
+    salt: felt252, name: felt252, symbol: felt252, owner: ContractAddress, supply: u256,
 ) -> ContractAddress {
     // Deploy factory.
     let contract = declare('Factory');
@@ -35,7 +34,7 @@ fn deploy_contract(
     // Deploy ERC20.
     let factory_safe_dispatcher = ITestSafeDispatcher { contract_address: factory_address };
     let erc20_contract_address: ContractAddress = factory_safe_dispatcher
-        .deploy(class_hash, salt, name, symbol, owner)
+        .deploy(class_hash, salt, name, symbol, owner, supply)
         .unwrap();
 
     return erc20_contract_address;
@@ -44,7 +43,7 @@ fn deploy_contract(
 #[test]
 fn test_deploy() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address);
+    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 0);
     let erc20_safe_dispatcher = ITestSafeDispatcher { contract_address };
 
     // Check decimals.
@@ -63,10 +62,11 @@ fn test_deploy() {
     let owner = erc20_safe_dispatcher.owner().unwrap();
     assert(owner == caller_address, 'Invalid owner');
 }
+
 #[test]
 fn test_mint() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address);
+    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 0);
     let erc20_safe_dispatcher = ITestSafeDispatcher { contract_address };
 
     // Check balance.
@@ -86,10 +86,11 @@ fn test_mint() {
     let balance_after = erc20_safe_dispatcher.balance_of(caller_address).unwrap();
     assert(balance_after == 42, 'Invalid balance');
 }
+
 #[test]
 fn test_transfer() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address);
+    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 0);
     let erc20_safe_dispatcher = ITestSafeDispatcher { contract_address };
 
     // Mint
@@ -119,7 +120,7 @@ fn test_transfer() {
 #[test]
 fn test_allowance_and_transfer_from() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address);
+    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 0);
     let erc20_safe_dispatcher = ITestSafeDispatcher { contract_address };
 
     // Mint
