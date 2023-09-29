@@ -21,19 +21,24 @@ use snforge_std::stop_prank;
 use starkcoin::tests::IERC20TestSafeDispatcher;
 use starkcoin::tests::IERC20TestSafeDispatcherTrait;
 
-fn deploy_contract(name: felt252) -> ContractAddress {
-    let contract = declare(name);
-    contract.deploy(@ArrayTrait::new()).unwrap()
+fn deploy_contract(
+    contract_name: felt252, name: felt252, symbol: felt252, owner: ContractAddress
+) -> ContractAddress {
+    let contract = declare(contract_name);
+
+    let mut constructor_calldata = ArrayTrait::new();
+    constructor_calldata.append(name);
+    constructor_calldata.append(symbol);
+    constructor_calldata.append(owner.into());
+
+    contract.deploy(@constructor_calldata).unwrap()
 }
 
 #[test]
-fn test_initialize() {
+fn test_deploy() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract('ERC20');
+    let contract_address = deploy_contract('ERC20', 'starkcoin', 'SCOIN', caller_address);
     let erc20_safe_dispatcher = IERC20TestSafeDispatcher { contract_address };
-
-    // Initialize.
-    erc20_safe_dispatcher.initialize('starkcoin', 'SCOIN', caller_address);
 
     // Check decimals.
     let decimals = erc20_safe_dispatcher.decimals().unwrap();
@@ -51,38 +56,11 @@ fn test_initialize() {
     let owner = erc20_safe_dispatcher.owner().unwrap();
     assert(owner == caller_address, 'Invalid owner');
 }
-
-// TODO: Ideally we want to check that the call reverts.
-#[test]
-fn test_reinitialize() {
-    let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract('ERC20');
-    let erc20_safe_dispatcher = IERC20TestSafeDispatcher { contract_address };
-
-    // Initialize.
-    erc20_safe_dispatcher.initialize('starkcoin', 'SCOIN', caller_address);
-
-    // Reinitialize and fail.
-    let new_owner: ContractAddress = contract_address_const::<0>();
-    erc20_safe_dispatcher.initialize('new-starkcoin', 'NSCOIN', new_owner);
-
-    // Check values remain unchanged.
-    let owner = erc20_safe_dispatcher.owner().unwrap();
-    assert(owner == caller_address, 'Invalid owner');
-    let name = erc20_safe_dispatcher.name().unwrap();
-    assert(name == 'starkcoin', 'Invalid name');
-    let symbol = erc20_safe_dispatcher.symbol().unwrap();
-    assert(symbol == 'SCOIN', 'Invalid symbol');
-}
-
 #[test]
 fn test_mint() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract('ERC20');
+    let contract_address = deploy_contract('ERC20', 'starkcoin', 'SCOIN', caller_address);
     let erc20_safe_dispatcher = IERC20TestSafeDispatcher { contract_address };
-
-    // Initialize.
-    erc20_safe_dispatcher.initialize('starkcoin', 'SCOIN', caller_address);
 
     // Check balance.
     let balance_before = erc20_safe_dispatcher.balance_of(caller_address).unwrap();
@@ -105,11 +83,13 @@ fn test_mint() {
 #[test]
 fn test_transfer() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract('ERC20');
+    let contract_address = deploy_contract('ERC20', 'starkcoin', 'SCOIN', caller_address);
     let erc20_safe_dispatcher = IERC20TestSafeDispatcher { contract_address };
 
     // Mint
+    start_prank(contract_address, caller_address);
     erc20_safe_dispatcher.mint(caller_address, 42).unwrap();
+    stop_prank(contract_address);
 
     // Check total supply.
     let total_supply = erc20_safe_dispatcher.total_supply().unwrap();
@@ -133,11 +113,13 @@ fn test_transfer() {
 #[test]
 fn test_allowance_and_transfer_from() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract('ERC20');
+    let contract_address = deploy_contract('ERC20', 'starkcoin', 'SCOIN', caller_address);
     let erc20_safe_dispatcher = IERC20TestSafeDispatcher { contract_address };
 
     // Mint
+    start_prank(contract_address, caller_address);
     erc20_safe_dispatcher.mint(caller_address, 42).unwrap();
+    stop_prank(contract_address);
 
     // Check total supply.
     let total_supply = erc20_safe_dispatcher.total_supply().unwrap();

@@ -39,9 +39,13 @@ trait IInitializable<TCS> {
 
 #[starknet::contract]
 mod ERC20 {
+    use core::zeroable::Zeroable;
     use starknet::ContractAddress;
     use starknet::get_caller_address;
     use starknet::contract_address_const;
+
+    // Constants.
+    const DECIMALS: u256 = 18_u256;
 
     // Storage.
 
@@ -50,7 +54,6 @@ mod ERC20 {
         // ERC20 storage.
         balance: LegacyMap::<ContractAddress, u256>,
         allowance: LegacyMap::<(ContractAddress, ContractAddress), u256>,
-        decimals: u256,
         name: felt252,
         symbol: felt252,
         total_supply: u256,
@@ -89,30 +92,24 @@ mod ERC20 {
         owner: ContractAddress,
     }
 
-    // Initializable implementation.
+    // Constructor.
 
-    #[external(v0)]
-    impl Initializable of super::IInitializable<ContractState> {
-        fn initialize(
-            ref self: ContractState, name: felt252, symbol: felt252, owner: ContractAddress
-        ) {
-            // Check if already initialized.
-            assert(self.decimals.read() != 18_u256, 'Already initialized.');
-            self.decimals.write(18_u256);
+    #[constructor]
+    fn constructor(
+        ref self: ContractState, name: felt252, symbol: felt252, owner: ContractAddress
+    ) {
+        // Set name and symbol.
+        self.name.write(name);
+        self.symbol.write(symbol);
 
-            // Set name and symbol.
-            self.name.write(name);
-            self.symbol.write(symbol);
+        // Set owner.
+        self.owner.write(owner);
 
-            // Set owner.
-            self.owner.write(owner);
+        // Set total supply.
+        self.total_supply.write(0_u256);
 
-            // Set total supply.
-            self.total_supply.write(0_u256);
-
-            // Emit Initialized event.
-            self.emit(Initialized { name: name, symbol: symbol, owner: owner });
-        }
+        // Emit Initialized event.
+        self.emit(Initialized { name: name, symbol: symbol, owner: owner });
     }
 
 
@@ -120,46 +117,41 @@ mod ERC20 {
 
     #[external(v0)]
     impl ERC20Impl of super::IERC20<ContractState> {
+        #[view]
         fn name(self: @ContractState) -> felt252 {
             self.name.read()
         }
 
+        #[view]
         fn symbol(self: @ContractState) -> felt252 {
             self.symbol.read()
         }
 
+        #[view]
         fn decimals(self: @ContractState) -> u256 {
-            self.decimals.read()
+            DECIMALS
         }
 
+        #[view]
         fn balance_of(self: @ContractState, account: ContractAddress) -> u256 {
             self.balance.read((account))
         }
 
+        #[view]
         fn allowance(
             self: @ContractState, owner: ContractAddress, spender: ContractAddress
         ) -> u256 {
             self.allowance.read((owner, spender))
         }
 
+        #[view]
         fn total_supply(self: @ContractState) -> u256 {
             self.total_supply.read()
         }
 
         fn transfer(ref self: ContractState, recipient: ContractAddress, amount: u256) -> bool {
-            // Get sender balance and decrease it.
-            let sender = get_caller_address();
-            let sender_balance = self.balance.read((sender));
-            self.balance.write((sender), sender_balance - amount);
-
-            // Get recipient balance and increase it.
-            let recipient_balance = self.balance.read((recipient));
-            self.balance.write((recipient), recipient_balance + amount);
-
-            // Emit Transfer event.
-            self.emit(Transfer { from: sender, to: recipient, amount: amount });
-
-            return true;
+            self.transfer_helper(get_caller_address(), recipient, amount);
+            true
         }
 
         fn transfer_from(
@@ -173,16 +165,7 @@ mod ERC20 {
             let sender_allowance = self.allowance.read((sender, caller));
             self.allowance.write((sender, caller), sender_allowance - amount);
 
-            // Get sender balance and decrease it.
-            let sender_balance = self.balance.read((sender));
-            self.balance.write((sender), sender_balance - amount);
-
-            // Get recipient balance and increase it.
-            let recipient_balance = self.balance.read((recipient));
-            self.balance.write((recipient), recipient_balance + amount);
-
-            // Emit Transfer event.
-            self.emit(Transfer { from: sender, to: recipient, amount: amount });
+            self.transfer_helper(sender, recipient, amount);
 
             true
         }
@@ -196,6 +179,28 @@ mod ERC20 {
             self.emit(Approval { owner: sender, spender: spender, amount: amount });
 
             true
+        }
+    }
+
+    #[generate_trait]
+    impl TransferHelpers of TransferHelperTrait {
+        fn transfer_helper(
+            ref self: ContractState,
+            sender: ContractAddress,
+            recipient: ContractAddress,
+            amount: u256,
+        ) {
+            assert(!sender.is_zero(), 'ERC20: sender is 0 address.');
+            assert(!recipient.is_zero(), 'ERC20: recipient is 0 address.');
+
+            // Decrease sender balance.
+            self.balance.write((sender), self.balance.read(sender) - amount);
+
+            // Increase recipient balance.
+            self.balance.write((recipient), self.balance.read(recipient) + amount);
+
+            // Emit Transfer event.
+            self.emit(Transfer { from: sender, to: recipient, amount: amount });
         }
     }
 
