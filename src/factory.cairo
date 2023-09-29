@@ -5,12 +5,13 @@ use starknet::ClassHash;
 #[starknet::interface]
 trait IFactory<TCS> {
     fn deploy(
-        self: @TCS,
+        ref self: TCS,
         class_hash: ClassHash,
         salt: felt252,
         name: felt252,
         symbol: felt252,
-        owner: ContractAddress
+        owner: ContractAddress,
+        supply: u256
     ) -> ContractAddress;
 }
 
@@ -47,12 +48,13 @@ mod Factory {
     #[external(v0)]
     impl FactoryImpl of super::IFactory<ContractState> {
         fn deploy(
-            self: @ContractState,
+            ref self: ContractState,
             class_hash: ClassHash,
             salt: felt252,
             name: felt252,
             symbol: felt252,
-            owner: ContractAddress
+            owner: ContractAddress,
+            supply: u256
         ) -> ContractAddress {
             let caller = get_caller_address();
 
@@ -66,16 +68,16 @@ mod Factory {
             )
                 .unwrap();
 
-            // self
-            //     .emit(
-            //         Deployed {
-            //             name: name,
-            //             symbol: symbol,
-            //             owner: caller,
-            //             supply: supply,
-            //             contract_address: contract_address,
-            //         }
-            //     );
+            self
+                .emit(
+                    Deployed {
+                        name: name,
+                        symbol: symbol,
+                        owner: caller,
+                        supply: supply,
+                        contract_address: contract_address,
+                    }
+                );
 
             contract_address
         }

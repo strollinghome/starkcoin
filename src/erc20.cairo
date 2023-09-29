@@ -45,6 +45,7 @@ mod ERC20 {
     use starknet::contract_address_const;
 
     // Constants.
+
     const DECIMALS: u256 = 18_u256;
 
     // Storage.
