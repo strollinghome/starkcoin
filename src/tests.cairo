@@ -1,7 +1,8 @@
 use starknet::{ContractAddress};
+use starknet::ClassHash;
 
 #[starknet::interface]
-trait IERC20Test<TCS> {
+trait ITest<TCS> {
     // Read functions.
     fn name(self: @TCS,) -> felt252;
     fn symbol(self: @TCS,) -> felt252;
@@ -28,4 +29,14 @@ trait IERC20Test<TCS> {
     fn validate_ownership(self: @TCS);
     fn renounce_ownership(ref self: TCS) -> bool;
     fn transfer_ownership(ref self: TCS, new_owner: ContractAddress) -> bool;
+
+    // Factory.
+    fn deploy(
+        self: @TCS,
+        class_hash: ClassHash,
+        salt: felt252,
+        name: felt252,
+        symbol: felt252,
+        owner: ContractAddress
+    ) -> ContractAddress;
 }
