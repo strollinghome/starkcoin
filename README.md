@@ -11,7 +11,7 @@
 
 ### Install Starknet Foundry
 
-See the [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html) for installation.
+Install Staknet Foundry (`snforge`, `sncast`). See the [Starknet Foundry Book](https://foundry-rs.github.io/starknet-foundry/getting-started/installation.html) for installation. You'll also need to install [Scarb](https://docs.swmansion.com/scarb/).
 
 ## Testing
 
