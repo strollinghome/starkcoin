@@ -4,6 +4,13 @@ ACCOUNT_DESCRIPTOR = ~/.starknet-wallets/account0_account.json
 ACCOUNT_KEY_STORE = ~/.starknet-wallets/account0_keystore.json
 
 
+run-fork:;
+	katana \
+	--accounts 3 \
+	--seed 0 \
+	--gas-price 250 \
+	--rpc-url "https://starknet-goerli.g.alchemy.com/v2/${ALCHEMY_API_KEY}"
+
 declare-erc20:; 
 	starkli declare target/dev/starkcoin_ERC20.sierra.json \
 	--compiler-version $(COMPILER_VERSION) \
