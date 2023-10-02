@@ -5,13 +5,7 @@ use starknet::ClassHash;
 #[starknet::interface]
 trait IFactory<TCS> {
     fn deploy(
-        ref self: TCS,
-        class_hash: ClassHash,
-        salt: felt252,
-        name: felt252,
-        symbol: felt252,
-        owner: ContractAddress,
-        supply: u256
+        ref self: TCS, name: felt252, symbol: felt252, owner: ContractAddress, supply: u256
     ) -> ContractAddress;
 }
 
@@ -20,6 +14,7 @@ mod Factory {
     use core::result::ResultTrait;
     use starknet::ContractAddress;
     use starknet::ClassHash;
+    use starknet::class_hash_try_from_felt252;
     use starknet::get_caller_address;
     use starknet::deploy_syscall;
     use starknet::get_contract_address;
@@ -49,12 +44,15 @@ mod Factory {
         contract_address: ContractAddress,
     }
 
+    #[constructor]
+    fn constructor(ref self: ContractState, class_hash: felt252) {
+        self.class_hash.write(class_hash_try_from_felt252(class_hash).unwrap());
+    }
+
     #[external(v0)]
     impl FactoryImpl of super::IFactory<ContractState> {
         fn deploy(
             ref self: ContractState,
-            class_hash: ClassHash,
-            salt: felt252,
             name: felt252,
             symbol: felt252,
             owner: ContractAddress,
@@ -68,7 +66,7 @@ mod Factory {
 
             // Deploy ERC20 contract.
             let (contract_address, _) = deploy_syscall(
-                class_hash, salt, constructor_calldata.span(), false
+                self.class_hash.read(), 1, constructor_calldata.span(), false
             )
                 .unwrap();
 

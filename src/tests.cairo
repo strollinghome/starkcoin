@@ -32,12 +32,6 @@ trait ITest<TCS> {
 
     // Factory.
     fn deploy(
-        ref self: TCS,
-        class_hash: ClassHash,
-        salt: felt252,
-        name: felt252,
-        symbol: felt252,
-        owner: ContractAddress,
-        supply: u256
+        ref self: TCS, name: felt252, symbol: felt252, owner: ContractAddress, supply: u256
     ) -> ContractAddress;
 }

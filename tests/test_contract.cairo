@@ -23,18 +23,22 @@ use starkcoin::tests::ITestSafeDispatcher;
 use starkcoin::tests::ITestSafeDispatcherTrait;
 
 fn deploy_contract(
-    salt: felt252, name: felt252, symbol: felt252, owner: ContractAddress, supply: u256,
+    name: felt252, symbol: felt252, owner: ContractAddress, supply: u256,
 ) -> ContractAddress {
-    // Deploy factory.
-    let contract = declare('Factory');
-    let factory_address = contract.deploy(@ArrayTrait::new()).unwrap();
-
     // Get ERC20 class_hash
     let class_hash: ClassHash = declare('ERC20').class_hash;
+
+    // Deploy factory.
+    let contract = declare('Factory');
+    let mut constructor_calldata = ArrayTrait::<felt252>::new();
+    constructor_calldata.append(class_hash.into());
+
+    let factory_address = contract.deploy(@constructor_calldata).unwrap();
+
     // Deploy ERC20.
     let factory_safe_dispatcher = ITestSafeDispatcher { contract_address: factory_address };
     let erc20_contract_address: ContractAddress = factory_safe_dispatcher
-        .deploy(class_hash, salt, name, symbol, owner, supply)
+        .deploy(name, symbol, owner, supply)
         .unwrap();
 
     return erc20_contract_address;
@@ -43,7 +47,7 @@ fn deploy_contract(
 #[test]
 fn test_deploy() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 0);
+    let contract_address = deploy_contract('starkcoin', 'SCOIN', caller_address, 0);
     let erc20_safe_dispatcher = ITestSafeDispatcher { contract_address };
 
     // Check decimals.
@@ -66,7 +70,7 @@ fn test_deploy() {
 #[test]
 fn test_mint() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 42);
+    let contract_address = deploy_contract('starkcoin', 'SCOIN', caller_address, 42);
     let erc20_safe_dispatcher = ITestSafeDispatcher { contract_address };
 
     // Check total supply.
@@ -80,7 +84,7 @@ fn test_mint() {
 #[test]
 fn test_transfer() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 42);
+    let contract_address = deploy_contract('starkcoin', 'SCOIN', caller_address, 42);
     let erc20_safe_dispatcher = ITestSafeDispatcher { contract_address };
 
     // Check total supply.
@@ -105,7 +109,7 @@ fn test_transfer() {
 #[test]
 fn test_allowance_and_transfer_from() {
     let caller_address: ContractAddress = contract_address_const::<42>();
-    let contract_address = deploy_contract(1, 'starkcoin', 'SCOIN', caller_address, 42);
+    let contract_address = deploy_contract('starkcoin', 'SCOIN', caller_address, 42);
     let erc20_safe_dispatcher = ITestSafeDispatcher { contract_address };
 
     // Check total supply.
