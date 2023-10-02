@@ -1,7 +1,7 @@
 COMPILER_VERSION = 2.1.0
 RPC_URL = http://0.0.0.0:5050
-ACCOUNT_DESCRIPTOR = ~/.starknet-wallets/account0_account.json
-ACCOUNT_KEY_STORE = ~/.starknet-wallets/account0_keystore.json
+ACCOUNT_DESCRIPTOR = ~/.starknet-wallets/develop_account.json
+ACCOUNT_KEY_STORE = ~/.starknet-wallets/develop_keystore.json
 
 
 run-fork:;
