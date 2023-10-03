@@ -112,7 +112,7 @@ mod Factory {
             // Validate name and symbol are unique.
             assert(
                 (self.deployed_contracts.read((name, symbol))).is_zero(),
-                'Name and symbol must be unique.'
+                'name and symbol must be unique.'
             );
 
             // Validate name is a valid ASCII string.
