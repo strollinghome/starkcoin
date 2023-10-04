@@ -1,14 +1,19 @@
-use traits::{DivRem};
-use starkcoin::ascii::is_valid_ascii_string;
+use starkcoin::ascii::AsciiTrait;
 
 #[test]
 fn test_ascii() {
     // In range.
-    assert(is_valid_ascii_string(32), 'Not valid ASCII');
-    assert(is_valid_ascii_string(126), 'Not valid ASCII');
+    assert(32.is_valid_ascii_string(), 'Not valid ASCII');
+    assert(126.is_valid_ascii_string(), 'Not valid ASCII');
 
     // Out of range.
-    assert(!is_valid_ascii_string(31), 'Valid ASCII');
-    assert(!is_valid_ascii_string(127), 'Valid ASCII');
+    assert(!31.is_valid_ascii_string(), 'Valid ASCII');
+    assert(!127.is_valid_ascii_string(), 'Valid ASCII');
+}
+
+
+#[test]
+fn test_ascii_char() {
+    assert(!'abcd\terminatorabcd'.is_valid_ascii_string(), 'Not valid ASCII');
 }
 

@@ -23,7 +23,7 @@ mod Factory {
     use starkcoin::mintable::IERC20MintableSafeDispatcherTrait;
     use starkcoin::ownable::IOwnableSafeDispatcher;
     use starkcoin::ownable::IOwnableSafeDispatcherTrait;
-    use starkcoin::ascii::is_valid_ascii_string;
+    use starkcoin::ascii::AsciiTrait;
 
     #[storage]
     struct Storage {
@@ -116,10 +116,10 @@ mod Factory {
             );
 
             // Validate name is a valid ASCII string.
-            assert(is_valid_ascii_string(name.into()), 'name not valid ASCII.');
+            assert(name.is_valid_ascii_string(), 'name not valid ASCII.');
 
             // Validate symbol is a valid ASCII string.
-            assert(is_valid_ascii_string(symbol.into()), 'symbol not valid ASCII.');
+            assert(symbol.is_valid_ascii_string(), 'symbol not valid ASCII.');
         }
     }
 }

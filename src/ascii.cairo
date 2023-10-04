@@ -1,15 +1,30 @@
-use traits::DivRem;
+trait AsciiTrait<T> {
+    fn is_valid_ascii_string(self: T) -> bool;
+}
 
-fn is_valid_ascii_string(short_string: u256) -> bool {
-    if short_string.is_zero() {
-        return true;
+impl AsciiTraitImpl of AsciiTrait<felt252> {
+    fn is_valid_ascii_string(self: felt252) -> bool {
+        let mut value: u256 = self.into();
+
+        // Check each byte of the string.
+        let valid: bool = loop {
+            if (value.is_zero()) {
+                break true;
+            }
+
+            let remainder: u256 = value % 256_u256;
+
+            if (remainder < 32) {
+                break false;
+            }
+
+            if (remainder > 126) {
+                break false;
+            }
+
+            value = value / 256_u256;
+        };
+
+        valid
     }
-
-    let (quotient, remainder) = DivRem::div_rem(short_string, 256_u256.try_into().unwrap());
-
-    if (remainder < 32) || (remainder > 126) {
-        return false;
-    }
-
-    is_valid_ascii_string(quotient)
 }
