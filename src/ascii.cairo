@@ -3,6 +3,8 @@ trait AsciiTrait<T> {
 }
 
 impl AsciiTraitImpl of AsciiTrait<felt252> {
+    // Empty string is valid since it contains no invalid characters.
+    // If the program wants to restrict empty strings, it should do so explicitly.
     fn is_valid_ascii_string(self: felt252) -> bool {
         let mut value: u256 = self.into();
 

@@ -138,7 +138,7 @@ fn test_allowance_and_transfer_from() {
 }
 
 #[test]
-fn test_invalid_name() {
+fn test_invalid_ascii_name_and_symbol() {
     let caller_address_0: ContractAddress = contract_address_const::<42>();
 
     // Get ERC20 class_hash
@@ -158,15 +158,15 @@ fn test_invalid_name() {
     let mut err = factory_safe_dispatcher
         .deploy(1.into(), 'SCOIN', caller_address_0, 0)
         .unwrap_err();
-    assert(@err.pop_front().unwrap() == @'name not valid ASCII.', 'should error.');
+    assert(@err.pop_front().unwrap() == @'Name not valid ASCII.', 'should error.');
 
     err = factory_safe_dispatcher.deploy('starkcoin', 1.into(), caller_address_0, 0).unwrap_err();
-    assert(@err.pop_front().unwrap() == @'symbol not valid ASCII.', 'should error.');
+    assert(@err.pop_front().unwrap() == @'Symbol not valid ASCII.', 'should error.');
 }
 
 
 #[test]
-fn test_unique_name_symbol() {
+fn test_unique_name() {
     let caller_address_0: ContractAddress = contract_address_const::<42>();
     let caller_address_1: ContractAddress = contract_address_const::<41>();
 
@@ -183,11 +183,73 @@ fn test_unique_name_symbol() {
     // Deploy ERC20.
     let factory_safe_dispatcher = ITestSafeDispatcher { contract_address: factory_address };
     // Should work.
-    factory_safe_dispatcher.deploy('starkcoin', 'SCOIN', caller_address_0, 0);
+    factory_safe_dispatcher.deploy('starkcoin', 'SCOIN_0', caller_address_0, 0);
     // Should error.
     let mut err = factory_safe_dispatcher
-        .deploy('starkcoin', 'SCOIN', caller_address_1, 0)
+        .deploy('starkcoin', 'SCOIN_1', caller_address_1, 0)
         .unwrap_err();
 
-    assert(@err.pop_front().unwrap() == @'name and symbol must be unique.', 'should error.');
+    assert(@err.pop_front().unwrap() == @'Name must be unique.', 'should error.');
 }
+
+#[test]
+fn test_unique_symbol() {
+    let caller_address_0: ContractAddress = contract_address_const::<42>();
+    let caller_address_1: ContractAddress = contract_address_const::<41>();
+
+    // Get ERC20 class_hash
+    let class_hash: ClassHash = declare('ERC20').class_hash;
+
+    // Deploy factory.
+    let contract = declare('Factory');
+    let mut constructor_calldata = ArrayTrait::<felt252>::new();
+    constructor_calldata.append(class_hash.into());
+
+    let factory_address = contract.deploy(@constructor_calldata).unwrap();
+
+    // Deploy ERC20.
+    let factory_safe_dispatcher = ITestSafeDispatcher { contract_address: factory_address };
+    // Should work.
+    factory_safe_dispatcher.deploy('starkcoin_0', 'SCOIN', caller_address_0, 0);
+    // Should error.
+    let mut err = factory_safe_dispatcher
+        .deploy('starkcoin_1', 'SCOIN', caller_address_1, 0)
+        .unwrap_err();
+
+    assert(@err.pop_front().unwrap() == @'Symbol must be unique.', 'should error.');
+}
+
+#[test]
+fn test_disallowed_symbol() {
+    let caller_address_0: ContractAddress = contract_address_const::<42>();
+
+    // Get ERC20 class_hash
+    let class_hash: ClassHash = declare('ERC20').class_hash;
+
+    // Deploy factory.
+    let contract = declare('Factory');
+    let mut constructor_calldata = ArrayTrait::<felt252>::new();
+    constructor_calldata.append(class_hash.into());
+
+    let factory_address = contract.deploy(@constructor_calldata).unwrap();
+
+    // Deploy ERC20.
+    let factory_safe_dispatcher = ITestSafeDispatcher { contract_address: factory_address };
+
+    // Should error.
+
+    let mut err = factory_safe_dispatcher
+        .deploy('starkcoin', 'ETH', caller_address_0, 0)
+        .unwrap_err();
+    assert(@err.pop_front().unwrap() == @'Invalid symbol.', 'should error.');
+
+    err = factory_safe_dispatcher.deploy('starkcoin', 'WETH', caller_address_0, 0).unwrap_err();
+    assert(@err.pop_front().unwrap() == @'Invalid symbol.', 'should error.');
+
+    err = factory_safe_dispatcher.deploy('starkcoin', 'USDC', caller_address_0, 0).unwrap_err();
+    assert(@err.pop_front().unwrap() == @'Invalid symbol.', 'should error.');
+
+    err = factory_safe_dispatcher.deploy('starkcoin', 'DAI', caller_address_0, 0).unwrap_err();
+    assert(@err.pop_front().unwrap() == @'Invalid symbol.', 'should error.');
+}
+

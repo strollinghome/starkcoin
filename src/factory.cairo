@@ -25,10 +25,16 @@ mod Factory {
     use starkcoin::ownable::IOwnableSafeDispatcherTrait;
     use starkcoin::ascii::AsciiTrait;
 
+    const ETH: felt252 = 'ETH';
+    const WETH: felt252 = 'WETH';
+    const USDC: felt252 = 'USDC';
+    const DAI: felt252 = 'DAI';
+
     #[storage]
     struct Storage {
         class_hash: ClassHash,
-        deployed_contracts: LegacyMap::<(felt252, felt252), ContractAddress>,
+        names: LegacyMap::<felt252, ContractAddress>,
+        symbols: LegacyMap::<felt252, ContractAddress>,
     }
 
     #[event]
@@ -89,8 +95,9 @@ mod Factory {
             // Transfer ownership.
             IOwnableSafeDispatcher { contract_address }.transfer_ownership(owner);
 
-            // Store contract address.
-            self.deployed_contracts.write((name, symbol), contract_address);
+            // Store used name and symbol.
+            self.names.write(name, contract_address);
+            self.symbols.write(symbol, contract_address);
 
             self
                 .emit(
@@ -110,16 +117,20 @@ mod Factory {
     impl InternalFunctions of InternalFunctionsTrait {
         fn _validate_name_and_symbol(self: @ContractState, name: felt252, symbol: felt252,) {
             // Validate name and symbol are unique.
+            assert((self.names.read(name)).is_zero(), 'Name must be unique.');
+            assert((self.symbols.read(symbol)).is_zero(), 'Symbol must be unique.');
+
+            // Validate popular symbols.
             assert(
-                (self.deployed_contracts.read((name, symbol))).is_zero(),
-                'name and symbol must be unique.'
+                symbol != ETH && symbol != WETH && symbol != USDC && symbol != DAI,
+                'Invalid symbol.'
             );
 
             // Validate name is a valid ASCII string.
-            assert(name.is_valid_ascii_string(), 'name not valid ASCII.');
+            assert(name.is_valid_ascii_string(), 'Name not valid ASCII.');
 
             // Validate symbol is a valid ASCII string.
-            assert(symbol.is_valid_ascii_string(), 'symbol not valid ASCII.');
+            assert(symbol.is_valid_ascii_string(), 'Symbol not valid ASCII.');
         }
     }
 }
